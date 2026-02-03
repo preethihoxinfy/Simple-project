@@ -1,0 +1,124 @@
+1.Write enum 
+
+2.Models
+
+3.dto
+
+4.expense service
+
+5.expense resolver
+
+6.change expense service by import prima.service
+
+7.keep expense resolver unchanged
+
+
+
+
+1️⃣ Install the REQUIRED adapter packages
+
+For PostgreSQL, Prisma 7 uses pg + adapter
+
+pnpm add pg
+pnpm add @prisma/adapter-pg
+
+
+You already have:
+
+@prisma/client@7
+prisma@7
+
+
+Good.
+
+2️⃣ schema.prisma (NO url here — this is correct)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+✅ NO url
+✅ Prisma 7 rule followed
+
+3️⃣ .env (YES, outside src is correct)
+DATABASE_URL="postgresql://user:password@localhost:5432/expense_tracker"
+
+
+✔ This is correct placement
+✔ NestJS + Prisma both expect it here
+
+4️⃣ FIX PrismaService (THIS IS THE KEY 🔑)
+
+This is where everything broke before.
+
+✅ Correct Prisma 7 PrismaService
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common'
+import { PrismaClient } from '@prisma/client'
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
+
+@Injectable()
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  constructor() {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    })
+
+    const adapter = new PrismaPg(pool)
+
+    super({
+      adapter,
+    })
+  }
+
+  async onModuleInit() {
+    await this.$connect()
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect()
+  }
+}
+
+🔥 IMPORTANT
+
+adapter ✅ valid
+
+datasources ❌ invalid
+
+datasourceUrl ❌ invalid
+
+empty constructor ❌ invalid
+
+This is why your app kept crashing.
+
+5️⃣ Prisma migrate (pnpm version)
+pnpm prisma generate
+pnpm prisma migrate dev --name init
+
+6️⃣ PrismaModule (must be global or imported)
+
+
+
+ <----   authendication--->
+pnpm add @nestjs/jwt passport passport-jwt bcryptc disconnect
+
+
+9.create auth(module,service ,resolver)/dto
+
+
+
+
+
+<----------git hub------->
+
+git init
+
+git add .
