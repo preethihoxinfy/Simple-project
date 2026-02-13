@@ -7,23 +7,19 @@ import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from '../auth/gql-auth.guard';
 
 @Resolver(() => Expense)
-@UseGuards(GqlAuthGuard) // applies to ALL resolvers below
 export class ExpenseResolver {
   constructor(private expenseService: ExpenseService) {}
 
-  // @Mutation(() => Expense)
-  // addExpense(@Args('createExpenseInput') input: CreateExpenseInput) {
-  //   return this.expenseService.create(input);
-  // }
-@Mutation(() => Expense)
-addExpense(
-  @Args('createExpenseInput') input: CreateExpenseInput, @Context() ctx: any,) 
-{
-  const userId = ctx.req.user.userId;//sub; // sub = user.id from JWT
-  return this.expenseService.create(input, userId);
-}
+  @Mutation(() => Expense)
+  @UseGuards(GqlAuthGuard)
+  addExpense(
+    @Args('createExpenseInput') input: CreateExpenseInput,
+    @Context() ctx: any,
+  ) {
+    const userId = ctx.req.user.id;
+    return this.expenseService.create(input, userId);
+  }
 
- 
   @Query(() => [Expense])
   expenses() {
     return this.expenseService.findAll();
@@ -39,5 +35,25 @@ addExpense(
   @Query(() => Number)
   totalExpense() {
     return this.expenseService.getTotal();
+  }
+
+  @Query(() => String)
+  @UseGuards(GqlAuthGuard)
+  async exportExpenses(@Context() ctx: any): Promise<string> {
+    const userId = ctx.req.user.id;
+    return this.expenseService.exportExpenses(userId);
+  }
+  @Query(() => String)
+  @UseGuards(GqlAuthGuard)
+  async generateCsv(@Context() ctx: any): Promise<string> {
+    const userId = ctx.req.user.id;
+    return this.expenseService.generateCsv(userId);
+  }
+
+  @Query(() => String)
+  @UseGuards(GqlAuthGuard)
+  async exportChartData(@Context() ctx: any): Promise<string> {
+    const userId = ctx.req.user.id;
+    return this.expenseService.exportChartData(userId);
   }
 }
